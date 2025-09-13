@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>CV – 4 langs + Photo + PDF + Examples (fixed chips)</title>
+<style>
+  :root{--royal:#0047AB;--ink:#0f172a;--muted:#475569;--bg:#f6f7fb;--card:#fff;--border:#e2e8f0;--radius:14px}
+  body{margin:0;font:16px system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--ink)}
+  .app{max-width:1100px;margin:0 auto;padding:20px}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+  .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .btn{padding:8px 12px;border:none;border-radius:8px;cursor:pointer}
+  .btn.primary{background:var(--royal);color:#fff}
+  .btn.ghost{background:#fff;color:var(--royal);border:1px solid var(--royal)}
+  .btn.tiny{padding:2px 8px;font-size:12px;border-radius:6px}
+  .langbar .btn{min-width:48px}
+  .langbar .btn.active{background:#0e61e9;color:#fff;border:none}
+
+  .canvas{display:grid;grid-template-columns:300px 1fr;gap:20px}
+  @media(max-width:800px){.canvas{grid-template-columns:1fr}}
+  .panel{background:var(--card);border-radius:var(--radius)}
+
+  .left{background:var(--royal);color:#fff;padding:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .section-title{margin:14px 0 8px;font-size:14px;letter-spacing:.3px;border-bottom:1px solid rgba(255,255,255,.35);padding-bottom:6px;font-weight:700;position:relative}
+  .section-title .removeSection{position:absolute;right:0;top:0;font-size:14px;background:none;border:none;color:inherit;cursor:pointer;opacity:.8}
+  .detail{display:grid;grid-template-columns:1.4em 1fr;column-gap:8px;align-items:start;margin-bottom:6px;line-height:1.45}
+  .detail .ico{width:1.4em;text-align:center}
+  .detail .txt{overflow-wrap:anywhere;word-break:break-word}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px 10px}
+  .chip{position:relative;display:inline-flex;align-items:center;gap:6px;padding:6px 28px 6px 10px;background:rgba(255,255,255,.18);border-radius:999px;border:1px solid rgba(255,255,255,.25)}
+  .chiptext[contenteditable]{outline:none}
+  .chip .x{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,0,0,.25);color:#fff;line-height:18px;text-align:center;font-weight:700;font-size:12px;cursor:pointer;display:none}
+  .chip:hover .x{display:block}
+
+  .right{background:#fff;padding:20px}
+  h1{margin:0 0 6px;font-size:28px}
+  h3{margin:14px 0 6px;font-size:15px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:6px}
+  .exp{position:relative;margin-bottom:12px;padding:6px 64px 12px 0;border-bottom:1px solid var(--border);page-break-inside:avoid}
+  .exp:last-child{border-bottom:none}
+  .exp .remove{position:absolute;right:0;top:0}
+  .muted{opacity:.85}
+  [contenteditable]{outline:none}
+
+  /* Photo widget */
+  .photoWrap{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:12px}
+  .photo{width:140px;height:140px;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.08);
+         border:2px dashed rgba(255,255,255,.45);position:relative;touch-action:none;box-sizing:border-box}
+  .photo img{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(1);
+             user-select:none;pointer-events:none;max-width:none;max-height:none;display:none}
+  .photo .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+               font-size:12px;opacity:.9;text-align:center;padding:6px}
+  .photo.drag{cursor:grabbing}
+  .photoCtrls{display:flex;gap:6px;flex-wrap:wrap}
+  .photoCtrls .tiny{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.35)}
+
+  /* ==== PRINT (A4) ==== */
+  @page { size: A4; margin: 10mm; }
+  @media print{
+    body{background:#fff}
+    .app{max-width:none;padding:0}
+    .topbar{display:none!important}
+    .canvas{gap:12mm;grid-template-columns:70mm 1fr}
+    .panel{border-radius:0}
+    .left{min-height:277mm}
+    h3{border-color:#cbd5e1;color:#334155}
+    .btn,.photoCtrls .tiny{display:none!important}
+    .exp{page-break-inside:avoid}
+  }
+
+/* Verplaats topbar naar linkerzijde van de pagina */
+.topbar {
+  justify-content: flex-start !important;
+  gap: 20px;
+}
+
+.app-heading {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 6px;
+  padding-left: 0;
+}
+
+@media print {
+  body {
+    margin-top: 0 !important;     /* bovenmarge hele pagina minimaliseren */
+  }
+  .canvas {
+    padding-top: 0 !important;    /* inhoud omhoog */
+  }
+  .left.panel,
+  .right.panel {
+    padding-top: 5px !important;  /* kleine buffer zodat tekst niet plakt */
+  }
+}
+
+@media print {
+  .app-heading { display: none !important; }
+}
+
+@media print {
+  .topbar > div:nth-of-type(2) { display: none !important; }
+}
+
+@media print {
+  body { margin-top: 0 !important; }
+  .canvas { padding-top: 0 !important; }
+  .left.panel, .right.panel { padding-top: 5px !important; }
+}
+
+@media print {
+  body { margin-top: 10px !important; }
+}
+
+@media print {
+  body { margin-bottom: 10px !important; }
+}
+</style>
+<style id="print-safe">
+/* ==== PRINT-SAFE (for browser print) ==== */
+@media print {
+  @page { size: A4; margin: 0; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  /* Blauwe balk via echt element dat op elke pagina zichtbaar blijft */
+  .bluebar { display:block; position: fixed; top:0; bottom:0; left:0; width:60mm; background: var(--royal); z-index:-1; }
+  .canvas { display:grid; grid-template-columns:60mm 1fr; gap:0; align-items:start; }
+  .left { background: transparent !important; padding:12mm 8mm; }
+  .right{ padding:12mm 8mm; }
+  .topbar, .btn, .photoCtrls { display:none !important; }
+  .photo, .photo img { border:0 !important; outline:0 !important; box-shadow:none !important; }
+  .photo { position: relative !important; overflow:hidden !important; }
+  .photo img { position: static !important; width:100% !important; height:100% !important; object-fit:cover !important; transform:none !important; display:block !important; }
+  /* Pills inline zonder flex */
+  .chips, .chiplist, .tags, .taglist, .skills .items, .languages .items, .knowledge .items { display:block !important; line-height:0 !important; }
+  .chip, .tag, .pill, .skill, .language, .knowledge { display:inline-block !important; line-height:1.2 !important; margin:0 8px 8px 0 !important; white-space:nowrap !important; }
+}
+</style>
+</head>
+<body>
+<div class="bluebar"></div>
+<div class="app"><div class="app-heading"><div><strong>CV Builder</strong> (<span id="brandLang">EN</span>) <small style="opacity:.6"></small></div></div>
+<div class="topbar">
+<div class="color-tools">
+  🎨 <input id="colorRoyal" title="Kolomkleur (royal)" type="color" value="#0047AB"/>
+  🖋️ <input id="colorInk" title="Tekstkleur (ink)" type="color" value="#0f172a"/>
+</div>
+<div class="row">
+<div class="langbar">
+<button class="btn ghost active" data-lang="en">EN</button>
+<button class="btn ghost" data-lang="nl">NL</button>
+<button class="btn ghost" data-lang="de">DE</button>
+<button class="btn ghost" data-lang="es">ES</button>
+</div>
+<button class="btn primary" id="btnPdf">Export PDF</button>
+<button class="btn ghost" id="btnExport">Export JSON</button>
+<input accept="application/json" id="fileImport" style="display:none" type="file"/>
+<button class="btn ghost" id="btnImport">Import JSON</button>
+<button class="btn ghost" id="btnReset">Reset</button>
+</div>
+</div>
+<div class="canvas">
+<aside class="left panel">
+<!-- Photo -->
+<div class="photoWrap">
+<div aria-label="Photo frame" class="photo" id="photoBox">
+<span class="hint" id="photoHint">Upload your photo</span>
+<img alt="photo" id="photoImg"/>
+</div>
+<input accept="image/*" hidden="" id="photoInput" type="file"/>
+<div class="photoCtrls">
+<button class="btn tiny" id="btnPhotoUpload">Upload</button>
+<button class="btn tiny" id="btnZoomOut">−</button>
+<button class="btn tiny" id="btnZoomIn">+</button>
+<button class="btn tiny" id="btnPhotoReset">Reset</button>
+</div>
+</div>
+<div class="section-title" id="t_personal">PERSONAL DETAILS</div>
+<div class="detail"><span class="ico">🏙️</span><span class="txt" contenteditable="" data-key="city">Enter your city</span></div>
+<div class="detail"><span class="ico">📞</span><span class="txt" contenteditable="" data-key="phone">Enter your phone number</span></div>
+<div class="detail"><span class="ico">✉️</span><span class="txt" contenteditable="" data-key="email">Enter your email address</span></div>
+<div class="detail"><span class="ico">🔗</span><span class="txt" contenteditable="" data-key="linkedin">Enter your LinkedIn profile</span></div>
+<div class="section-title" id="t_talents">SKILLS</div>
+<div class="chips" id="talentChips"></div>
+<button class="btn ghost" id="addTalent">+ Add skill</button>
+<div class="section-title" id="t_languages">LANGUAGES</div>
+<div class="chips" id="langChips"></div>
+<button class="btn ghost" id="addLanguage">+ Add language</button>
+<div class="section-title" id="t_knowledge">KNOWLEDGE</div>
+<div class="chips" id="knowChips"></div>
+<button class="btn ghost" id="addKnowledge">+ Add knowledge</button>
+<div class="section-title" id="t_certificates">CERTIFICATES <button class="removeSection" data-target="certs">×</button></div>
+<div id="certs"></div>
+<button class="btn ghost" id="addCert">+ Add certificate</button>
+<div class="section-title" id="t_volunteer">VOLUNTEERING <button class="removeSection" data-target="volunteerWrap">×</button></div>
+<div id="volunteerWrap"></div>
+<button class="btn ghost" id="addVolunteer">+ Add volunteering</button>
+<div class="section-title" id="t_projects">PROJECTS <button class="removeSection" data-target="projects">×</button></div>
+<div id="projects"></div>
+<button class="btn ghost" id="addProj">+ Add project</button>
+</aside>
+<main class="right panel">
+<h1 contenteditable="" data-key="name">Alex Harper (example)</h1>
+<div class="muted" contenteditable="" data-key="role">Operations Manager (example)</div>
+<h3 id="t_profile">PROFILE</h3>
+<p contenteditable="" data-key="summary">Experienced operations leader with a focus on safety, quality and flow. Clear KPIs, practical standards and a coaching style. On LinkedIn I share brief posts about continuous improvement and team development. (Sample — replace with your own profile)</p>
+<h3 id="t_experience">WORK EXPERIENCE</h3>
+<div id="experience"></div>
+<button class="btn ghost" id="addExp">+ Add experience</button>
+<h3 id="t_education">EDUCATION</h3>
+<div id="education"></div>
+<button class="btn ghost" id="addEdu">+ Add education</button>
+</main>
+</div>
+</div>
+<script>
+(function(){
+  /* ================== i18n ================== */
+  const I = {
+    en:{
+      brand:'EN',personal:'PERSONAL DETAILS',talents:'SKILLS',languages:'LANGUAGES',knowledge:'KNOWLEDGE',
+      certificates:'CERTIFICATES',volunteering:'VOLUNTEERING',projects:'PROJECTS',
+      city:'Enter your city',phone:'Enter your phone number',email:'Enter your email address',linkedin:'Enter your LinkedIn profile',
+      addTalent:'+ Add skill',addLanguage:'+ Add language',addKnowledge:'+ Add knowledge',addCert:'+ Add certificate',addVolunteer:'+ Add volunteering',addProj:'+ Add project',
+      remove:'Remove',newChip:'New',
+      chips:{talents:['Reliable','Persistent','Team player'],languages:['English – fluent','Dutch – good','German – basic'],knowledge:['Lean','6S','Project management']},
+      profile:'PROFILE',experience:'WORK EXPERIENCE',education:'EDUCATION',
+      name:'Alex Harper (example)',role:'Operations Manager (example)',
+      summary:'Experienced operations leader with a focus on safety, quality and flow. Clear KPIs, practical standards and a coaching style. On LinkedIn I share brief posts about continuous improvement and team development. (Sample — replace with your own profile)',
+      expSamples:[
+        {title:'Operations Manager', meta:'GreenField Manufacturing · Rotterdam · 2021–present',
+         bullets:['+20% output after layout and changeover improvements (SMED).','0 LTIs in 24 months through toolbox talks and visual standards.']},
+        {title:'Production Supervisor', meta:'HarborTech · Amsterdam · 2016–2021',
+         bullets:['–15% defects via root-cause analysis (A3) and standard work.','+12% OTIF with tighter MRP parameters and planning.']}
+      ],
+      eduSamples:[
+        {title:'BSc – Operations & Supply Chain', meta:'University of Applied Sciences · 2012–2016'}
+      ],
+      expEx:{title:'Role / Position',meta:'Company · Location · Years',bullet:'Result / responsibility'},
+      eduEx:{title:'Degree or course',meta:'Institution · Year'},
+      photoHint:'Upload your photo',photoUpload:'Upload',photoReset:'Reset',print:'Export PDF'
+    },
+    nl:{
+      brand:'NL',personal:'PERSOONLIJKE GEGEVENS',talents:'TALENTEN',languages:'TALEN',knowledge:'KENNIS VAN',
+      certificates:'CERTIFICATEN',volunteering:'VRIJWILLIGERSWERK',projects:'PROJECTEN',
+      city:'Vul hier je woonplaats in',phone:'Vul hier je telefoonnummer in',email:'Vul hier je e-mailadres in',linkedin:'Vul hier je LinkedIn-profiel in',
+      addTalent:'+ Voeg talent toe',addLanguage:'+ Voeg taal toe',addKnowledge:'+ Voeg kennis toe',addCert:'+ Voeg certificaat toe',addVolunteer:'+ Voeg vrijwilligerswerk toe',addProj:'+ Voeg project toe',
+      remove:'Verwijder',newChip:'Nieuw',
+      chips:{talents:['Betrouwbaar','Doorzetter','Teamspeler'],languages:['Nederlands – vloeiend','Engels – goed','Duits – basis'],knowledge:['Lean','6S','Projectmanagement']},
+      profile:'PROFIEL',experience:'WERKERVARING',education:'OPLEIDING',
+      name:'Alex Harper (voorbeeld)',role:'Operations Manager (voorbeeld)',
+      summary:'Operationeel leider met focus op veiligheid, kwaliteit en flow. Duidelijke KPI’s, praktische standaarden en een coachende stijl. Op LinkedIn deel ik korte posts over continu verbeteren en teamontwikkeling. (Voorbeeld — vervang door je eigen profiel)',
+      expSamples:[
+        {title:'Operations Manager', meta:'GreenField Manufacturing · Rotterdam · 2021–heden',
+         bullets:['+20% output na lay-out- en omsteltijdverbeteringen (SMED).','0 LTI’s in 24 maanden via toolbox-meetings en visuele standaarden.']},
+        {title:'Productievoorman', meta:'HarborTech · Amsterdam · 2016–2021',
+         bullets:['–15% fouten door root-cause analyse (A3) en standaardwerk.','+12% OTIF met strakkere MRP-parameters en planning.']}
+      ],
+      eduSamples:[
+        {title:'HBO – Operations & Supply Chain', meta:'Hogeschool · 2012–2016'}
+      ],
+      expEx:{title:'Functie',meta:'Bedrijf · Plaats · Jaren',bullet:'Resultaat / verantwoordelijkheid'},
+      eduEx:{title:'Opleiding of cursus',meta:'Instituut · Jaar'},
+      photoHint:'Upload je foto',photoUpload:'Upload',photoReset:'Reset',print:'Exporteer PDF'
+    },
+    de:{
+      brand:'DE',personal:'PERSÖNLICHE DATEN',talents:'FÄHIGKEITEN',languages:'SPRACHEN',knowledge:'FACHKENNTNISSE',
+      certificates:'ZERTIFIKATE',volunteering:'EHRENAMT',projects:'PROJEKTE',
+      city:'Wohnort eingeben',phone:'Telefonnummer eingeben',email:'E-Mail-Adresse eingeben',linkedin:'LinkedIn-Profil eingeben',
+      addTalent:'+ Fähigkeit hinzufügen',addLanguage:'+ Sprache hinzufügen',addKnowledge:'+ Fachkenntnis hinzufügen',addCert:'+ Zertifikat hinzufügen',addVolunteer:'+ Ehrenamt hinzufügen',addProj:'+ Projekt hinzufügen',
+      remove:'Entfernen',newChip:'Neu',
+      chips:{talents:['Zuverlässig','Ausdauernd','Teamorientiert'],languages:['Deutsch – fließend','Englisch – gut','Niederländisch – Grundkenntnisse'],knowledge:['Lean','6S','Projektmanagement']},
+      profile:'PROFIL',experience:'BERUFSERFAHRUNG',education:'AUSBILDUNG',
+      name:'Alex Harper (Beispiel)',role:'Operations Manager (Beispiel)',
+      summary:'Erfahrener Operations Manager mit Fokus auf Sicherheit, Qualität und Fluss. Klare KPIs, praxistaugliche Standards und ein coachender Führungsstil. Auf LinkedIn teile ich kurze Beiträge zu kontinuierlicher Verbesserung und Teamentwicklung. (Beispiel – bitte ersetzen)',
+      expSamples:[
+        {title:'Operations Manager', meta:'GreenField Manufacturing · Rotterdam · 2021–heute',
+         bullets:['+20 % Output nach Layout- und Rüstzeitverbesserungen (SMED).','0 Arbeitsunfälle in 24 Monaten durch Toolbox-Talks und visuelle Standards.']},
+        {title:'Produktionsleiter', meta:'HarborTech · Amsterdam · 2016–2021',
+         bullets:['–15 % Fehler durch Ursachenanalyse (A3) und Standardarbeit.','+12 % OTIF dank strengerer MRP-Parameter und Planung.']}
+      ],
+      eduSamples:[
+        {title:'B.Sc. – Operations & Supply Chain', meta:'Fachhochschule · 2012–2016'}
+      ],
+      expEx:{title:'Funktion / Position',meta:'Unternehmen · Ort · Jahre',bullet:'Ergebnis / Verantwortlichkeit'},
+      eduEx:{title:'Abschluss oder Kurs',meta:'Institution · Jahr'},
+      photoHint:'Foto hochladen',photoUpload:'Upload',photoReset:'Zurücksetzen',print:'PDF exportieren'
+    },
+    es:{
+      brand:'ES',personal:'DATOS PERSONALES',talents:'COMPETENCIAS',languages:'IDIOMAS',knowledge:'CONOCIMIENTOS',
+      certificates:'CERTIFICADOS',volunteering:'VOLUNTARIADO',projects:'PROYECTOS',
+      city:'Introduce tu ciudad',phone:'Introduce tu número de teléfono',email:'Introduce tu correo electrónico',linkedin:'Introduce tu perfil de LinkedIn',
+      addTalent:'+ Añadir competencia',addLanguage:'+ Añadir idioma',addKnowledge:'+ Añadir conocimiento',addCert:'+ Añadir certificado',addVolunteer:'+ Añadir voluntariado',addProj:'+ Añadir proyecto',
+      remove:'Eliminar',newChip:'Nuevo',
+      chips:{talents:['Confiable','Perseverante','Trabajo en equipo'],languages:['Español – nativo','Inglés – avanzado','Alemán – básico'],knowledge:['Lean','6S','Gestión de proyectos']},
+      profile:'PERFIL',experience:'EXPERIENCIA LABORAL',education:'FORMACIÓN',
+      name:'Alex Harper (ejemplo)',role:'Gerente de Operaciones (ejemplo)',
+      summary:'Líder de operaciones enfocado en seguridad, calidad y flujo. KPIs claros, estándares prácticos y un estilo de liderazgo de coaching. En LinkedIn comparto publicaciones breves sobre mejora continua y desarrollo de equipos. (Ejemplo — reemplázalo por tu perfil)',
+      expSamples:[
+        {title:'Gerente de Operaciones', meta:'GreenField Manufacturing · Róterdam · 2021–actualidad',
+         bullets:['+20% de producción tras mejoras de layout y cambio rápido (SMED).','0 incidentes registrables en 24 meses mediante charlas de seguridad y estándares visuales.']},
+        {title:'Supervisor de Producción', meta:'HarborTech · Ámsterdam · 2016–2021',
+         bullets:['–15% defectos con análisis de causa raíz (A3) y trabajo estándar.','+12% OTIF con parámetros MRP más estrictos y planificación.']}
+      ],
+      eduSamples:[
+        {title:'Grado – Operaciones y Supply Chain', meta:'Universidad de Ciencias Aplicadas · 2012–2016'}
+      ],
+      expEx:{title:'Puesto / Cargo',meta:'Empresa · Ciudad · Años',bullet:'Resultado / responsabilidad'},
+      eduEx:{title:'Titulación o curso',meta:'Institución · Año'},
+      photoHint:'Sube tu foto',photoUpload:'Subir',photoReset:'Restablecer',print:'Exportar PDF'
+    }
+  };
+
+  let lang='en';
+  const $=(s,root=document)=>root.querySelector(s);
+  const $$=(s,root=document)=>Array.from(root.querySelectorAll(s));
+  const DEFAULTS=['en','nl','de','es'].map(L=>I[L]);
+
+  /* ================== Photo (auto-fit / zoom / pan) ================== */
+  let scale=1,minScale=0.5,maxScale=3,offX=0,offY=0,dragging=false,sx=0,sy=0,sox=0,soy=0;
+  const el={
+    photoInput:$('#photoInput'),photoImg:$('#photoImg'),photoHint:$('#photoHint'),photoBox:$('#photoBox'),
+    btnUp:$('#btnPhotoUpload'),btnZI:$('#btnZoomIn'),btnZO:$('#btnZoomOut'),btnRST:$('#btnPhotoReset')
+  };
+  function applyTransform(){el.photoImg.style.transform=`translate(calc(-50% + ${offX}px), calc(-50% + ${offY}px)) scale(${scale})`;}
+  function showImg(){el.photoImg.style.display='block';el.photoHint.style.display='none';}
+  function fitImageToBox(){
+    const bw=el.photoBox.clientWidth,bh=el.photoBox.clientHeight,iw=el.photoImg.naturalWidth,ih=el.photoImg.naturalHeight;
+    if(!iw||!ih||!bw||!bh) return;
+    const coverScale=Math.max(bw/iw,bh/ih);
+    minScale=coverScale; scale=coverScale; offX=0; offY=0; applyTransform();
+  }
+  function loadFile(f){
+    if(!f) return; const r=new FileReader();
+    r.onload=()=>{ el.photoImg.onload=()=>{ showImg(); setTimeout(fitImageToBox,0); }; el.photoImg.src=r.result; };
+    r.readAsDataURL(f);
+  }
+  function startDrag(x,y){ if(el.photoImg.style.display!=='block')return; dragging=true;el.photoBox.classList.add('drag');sx=x;sy=y;sox=offX;soy=offY;}
+  function moveDrag(x,y){ if(!dragging)return; offX=sox+(x-sx); offY=soy+(y-sy); applyTransform(); }
+  function endDrag(){ dragging=false; el.photoBox.classList.remove('drag'); }
+  el.btnUp.addEventListener('click',()=>el.photoInput.click());
+  el.btnRST.addEventListener('click',()=>{ el.photoImg.src=''; el.photoImg.style.display='none'; el.photoHint.style.display='flex'; el.photoInput.value=''; scale=1;offX=0;offY=0;minScale=0.5;});
+  el.photoInput.addEventListener('change',e=>loadFile(e.target.files[0]));
+  ['dragenter','dragover','dragleave','drop'].forEach(ev=>{ el.photoBox.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();});});
+  el.photoBox.addEventListener('drop',e=>{const f=e.dataTransfer.files?.[0]; if(f&&f.type.startsWith('image/')) loadFile(f);});
+  el.photoBox.addEventListener('wheel',e=>{
+    if(el.photoImg.style.display!=='block') return; e.preventDefault();
+    const prev=scale,next=Math.min(maxScale,Math.max(minScale,scale*(e.deltaY>0?0.9:1.111))); if(next===prev) return;
+    const rect=el.photoBox.getBoundingClientRect(),cx=e.clientX-rect.left-rect.width/2,cy=e.clientY-rect.top-rect.height/2;
+    offX=cx-((cx-offX)*(next/prev)); offY=cy-((cy-offY)*(next/prev)); scale=next; applyTransform();
+  },{passive:false});
+  el.btnZI.addEventListener('click',()=>{ if(el.photoImg.style.display!=='block') return; scale=Math.min(maxScale,Math.max(minScale,scale*1.111)); applyTransform(); });
+  el.btnZO.addEventListener('click',()=>{ if(el.photoImg.style.display!=='block') return; scale=Math.max(minScale,scale*0.9); applyTransform(); });
+  el.photoBox.addEventListener('mousedown',e=>startDrag(e.clientX,e.clientY));
+  window.addEventListener('mousemove',e=>moveDrag(e.clientX,e.clientY));
+  window.addEventListener('mouseup',endDrag);
+  el.photoBox.addEventListener('touchstart',e=>{ if(e.touches.length===1){const t=e.touches[0]; startDrag(t.clientX,t.clientY);}},{passive:true});
+  el.photoBox.addEventListener('touchmove',e=>{ if(e.touches.length===1){const t=e.touches[0]; moveDrag(t.clientX,t.clientY);}},{passive:true});
+  el.photoBox.addEventListener('touchend',endDrag);
+
+  /* ================== Helpers (chips) ================== */
+  function createChip(text){
+    const s=document.createElement('span');
+    s.className='chip';
+    s.innerHTML=`<span class="chiptext" contenteditable>${text}</span><button class="x">×</button>`;
+    return s;
+  }
+  function setChips(sel,vals){
+    const w=$(sel); if(!w) return; w.innerHTML='';
+    vals.forEach(v=>w.appendChild(createChip(v)));
+  }
+  function readChips(sel){
+    const w=$(sel); if(!w) return [];
+    return $$('.chiptext',w).map(n=>(n.textContent||'').trim());
+  }
+  function equalArrays(a,b){ if(a.length!==b.length) return false; for(let i=0;i<a.length;i++){ if(a[i]!==b[i]) return false; } return true; }
+
+  function setChipsSmart(sel, key){
+    const cur = readChips(sel);
+    const isEmpty = cur.length===0;
+    const matchesOtherDefault = ['en','nl','de','es'].some(L => {
+      if(L===lang) return false;
+      const def = I[L].chips[key];
+      return equalArrays(cur, def);
+    });
+    if(isEmpty || matchesOtherDefault){
+      setChips(sel, I[lang].chips[key]);
+    }
+  }
+
+  /* ================== Examples (right side) ================== */
+  function addBlock(sel, html, isExample=false){
+    const w=document.createElement('div'); w.className='exp'; if(isExample) w.dataset.example="1";
+    w.innerHTML=html;
+    const r=document.createElement('button'); r.type='button'; r.className='btn ghost tiny remove'; r.textContent=I[lang].remove;
+    r.addEventListener('click',()=>w.remove()); w.prepend(r);
+    $(sel).appendChild(w);
+  }
+  function seedExamplesIfEmpty(){
+    const exWrap=$('#experience'), edWrap=$('#education');
+    const t=I[lang];
+    if(exWrap && exWrap.children.length===0){
+      t.expSamples.forEach(s=>{
+        const bullets=(s.bullets||[]).map(b=>`<li>${b}</li>`).join('');
+        addBlock('#experience', `<div contenteditable>${s.title}</div>
+          <div class="muted" contenteditable>${s.meta}</div>
+          <ul contenteditable>${bullets}</ul>`, true);
+      });
+    }
+    if(edWrap && edWrap.children.length===0){
+      t.eduSamples.forEach(s=>{
+        addBlock('#education', `<div contenteditable>${s.title}</div>
+          <div class="muted" contenteditable>${s.meta}</div>`, true);
+      });
+    }
+  }
+  function translateExamplesIfUnedited(){
+    const exItems = $$('#experience .exp[data-example="1"]');
+    const edItems = $$('#education .exp[data-example="1"]');
+    const t=I[lang];
+    if(exItems.length>0){
+      $('#experience').innerHTML='';
+      t.expSamples.forEach(s=>{
+        const bullets=(s.bullets||[]).map(b=>`<li>${b}</li>`).join('');
+        addBlock('#experience', `<div contenteditable>${s.title}</div>
+          <div class="muted" contenteditable>${s.meta}</div>
+          <ul contenteditable>${bullets}</ul>`, true);
+      });
+    }
+    if(edItems.length>0){
+      $('#education').innerHTML='';
+      t.eduSamples.forEach(s=>{
+        addBlock('#education', `<div contenteditable>${s.title}</div>
+          <div class="muted" contenteditable>${s.meta}</div>`, true);
+      });
+    }
+  }
+
+  /* ================== UI / i18n ================== */
+  function applyLang(){
+    const t=I[lang];
+    $('#brandLang').textContent=t.brand;
+    $$('.langbar .btn').forEach(b=>b.classList.toggle('active', b.getAttribute('data-lang')===lang));
+
+    // Left labels
+    $('#t_personal').textContent=t.personal;
+    $('#t_talents').firstChild.textContent=t.talents;
+    $('#t_languages').firstChild.textContent=t.languages;
+    $('#t_knowledge').firstChild.textContent=t.knowledge;
+
+    const hCert=$('#t_certificates'); if(hCert){const x=hCert.querySelector('.removeSection'); hCert.textContent=t.certificates+' '; if(x) hCert.appendChild(x);}
+    const hVol=$('#t_volunteer'); if(hVol){const x=hVol.querySelector('.removeSection'); hVol.textContent=t.volunteering+' '; if(x) hVol.appendChild(x);}
+    const hProj=$('#t_projects'); if(hProj){const x=hProj.querySelector('.removeSection'); hProj.textContent=t.projects+' '; if(x) hProj.appendChild(x);}
+
+    $('[data-key="city"]').textContent=t.city;
+    $('[data-key="phone"]').textContent=t.phone;
+    $('[data-key="email"]').textContent=t.email;
+    $('[data-key="linkedin"]').textContent=t.linkedin;
+
+    $('#addTalent').textContent=t.addTalent;
+    $('#addLanguage').textContent=t.addLanguage;
+    $('#addKnowledge').textContent=t.addKnowledge;
+    $('#addCert').textContent=t.addCert;
+    $('#addVolunteer').textContent=t.addVolunteer;
+    $('#addProj').textContent=t.addProj;
+
+    $('#photoHint').textContent=t.photoHint;
+    $('#btnPhotoUpload').textContent=t.photoUpload;
+    $('#btnPhotoReset').textContent=t.photoReset;
+    $('#btnPdf').textContent=t.print;
+
+    // Right labels & examples
+    $('#t_profile').textContent=t.profile;
+    $('#t_experience').textContent=t.experience;
+    $('#t_education').textContent=t.education;
+
+    $('[data-key="name"]').textContent=t.name;
+    $('[data-key="role"]').textContent=t.role;
+    $('[data-key="summary"]').textContent=t.summary;
+
+    // CHIPS: slim zetten (alleen als leeg of exact andere-taal-default)
+    setChipsSmart('#talentChips','talents');
+    setChipsSmart('#langChips','languages');
+    setChipsSmart('#knowChips','knowledge');
+
+    // Voorbeeldblokken rechts meertalig bijhouden zolang onbewerkt
+    translateExamplesIfUnedited();
+  }
+
+  // Add item knoppen (rechts)
+  $('#addExp').addEventListener('click',()=>{
+    const t=I[lang];
+    addBlock('#experience', `<div contenteditable>${t.expEx.title}</div>
+      <div class="muted" contenteditable>${t.expEx.meta}</div>
+      <ul contenteditable><li>${t.expEx.bullet}</li></ul>`, false);
+  });
+  $('#addEdu').addEventListener('click',()=>{
+    const t=I[lang];
+    addBlock('#education', `<div contenteditable>${t.eduEx.title}</div>
+      <div class="muted" contenteditable>${t.eduEx.meta}</div>`, false);
+  });
+  $('#addCert').addEventListener('click',()=>{
+    const meta=(lang==='en')?'Authority · Year':(lang==='nl')?'Instantie · Jaar':(lang==='de')?'Institution · Jahr':'Entidad · Año';
+    const title=(lang==='en')?'Certificate':(lang==='nl')?'Certificaat':(lang==='de')?'Zertifikat':'Certificado';
+    addBlock('#certs', `<div contenteditable>${title}</div><div class="muted" contenteditable>${meta}</div>`);
+  });
+  $('#addVolunteer').addEventListener('click',()=>{
+    const title=(lang==='en')?'Role or organization':(lang==='nl')?'Rol of organisatie':(lang==='de')?'Funktion oder Organisation':'Rol o entidad';
+    const meta=(lang==='en')?'Organization · Year':(lang==='nl')?'Organisatie · Jaar':(lang==='de')?'Organisation · Jahr':'Entidad · Año';
+    addBlock('#volunteerWrap', `<div contenteditable>${title}</div><div class="muted" contenteditable>${meta}</div>`);
+  });
+  $('#addProj').addEventListener('click',()=>{
+    const title=(lang==='en')?'Project title':(lang==='nl')?'Projecttitel':(lang==='de')?'Projekttitel':'Título del proyecto';
+    const meta=(lang==='en')?'Role · Year':(lang==='nl')?'Rol · Jaar':(lang==='de')?'Rolle · Jahr':'Rol · Año';
+    const bullet=(lang==='en')?'Outcome / contribution':(lang==='nl')?'Resultaat / bijdrage':(lang==='de')?'Ergebnis / Beitrag':'Resultado / contribución';
+    addBlock('#projects', `<div contenteditable>${title}</div><div class="muted" contenteditable>${meta}</div><ul contenteditable><li>${bullet}</li></ul>`);
+  });
+
+  // Remove chips / sections / items
+  document.addEventListener('click',e=>{
+    if(e.target.classList.contains('x')) e.target.parentElement.remove();
+    if(e.target.classList.contains('removeSection')){
+      const tgt=e.target.getAttribute('data-target'); e.target.closest('.section-title')?.remove();
+      const cont=document.getElementById(tgt); if(cont) cont.remove();
+      if(tgt==='certs') $('#addCert')?.remove();
+      if(tgt==='volunteerWrap') $('#addVolunteer')?.remove();
+      if(tgt==='projects') $('#addProj')?.remove();
+    }
+    if(e.target.classList.contains('remove')) e.target.closest('.exp')?.remove();
+  });
+
+  // Chips toevoegen (taal-specifieke defaulttekst)
+  function addChipFromBtn(btnId){
+    const btn=$(btnId); if(!btn) return;
+    btn.addEventListener('click', ()=>{
+      const map={'#addTalent':'#talentChips','#addLanguage':'#langChips','#addKnowledge':'#knowChips'};
+      const wrapSel=map[btnId];
+      const chip=createChip(I[lang].newChip);
+      $(wrapSel).appendChild(chip);
+    });
+  }
+  addChipFromBtn('#addTalent');
+  addChipFromBtn('#addLanguage');
+  addChipFromBtn('#addKnowledge');
+
+  // Language toggle + Print + Export/Import/Reset
+  $$('.langbar .btn').forEach(b=>b.addEventListener('click',()=>{ lang=b.getAttribute('data-lang'); applyLang(); }));
+  $('#btnPdf').addEventListener('click',()=>window.print());
+  $('#btnExport').addEventListener('click',()=>{
+    const data={ lang,
+      personal:{city:$('[data-key="city"]').textContent,phone:$('[data-key="phone"]').textContent,email:$('[data-key="email"]').textContent,linkedin:$('[data-key="linkedin"]').textContent},
+      chips:{talents:readChips('#talentChips'),languages:readChips('#langChips'),knowledge:readChips('#knowChips')},
+      name:$('[data-key="name"]').textContent, role:$('[data-key="role"]').textContent, summary:$('[data-key="summary"]').textContent,
+      experience:Array.from(document.querySelectorAll('#experience .exp')).map(e=>({example:!!e.dataset.example,title:e.querySelector('div[contenteditable]')?.textContent||'',meta:e.querySelector('.muted')?.textContent||'',bullets:Array.from(e.querySelectorAll('ul li')).map(li=>li.textContent)})),
+      education:Array.from(document.querySelectorAll('#education .exp')).map(e=>({example:!!e.dataset.example,title:e.querySelector('div[contenteditable]')?.textContent||'',meta:e.querySelector('.muted')?.textContent||''}))
+    };
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='cv.json'; a.click();
+  });
+  $('#btnImport').addEventListener('click',()=>$('#fileImport').click());
+  $('#fileImport').addEventListener('change', e=>{
+    const f=e.target.files[0]; if(!f) return; const r=new FileReader();
+    r.onload=()=>{ try{
+        const d=JSON.parse(r.result); if(d.lang) lang=d.lang;
+        $('[data-key="city"]').textContent=d.personal?.city||''; $('[data-key="phone"]').textContent=d.personal?.phone||'';
+        $('[data-key="email"]').textContent=d.personal?.email||''; $('[data-key="linkedin"]').textContent=d.personal?.linkedin||'';
+        setChips('#talentChips',d.chips?.talents||[]); setChips('#langChips',d.chips?.languages||[]); setChips('#knowChips',d.chips?.knowledge||[]);
+        $('[data-key="name"]').textContent=d.name||''; $('[data-key="role"]').textContent=d.role||''; $('[data-key="summary"]').textContent=d.summary||'';
+        $('#experience').innerHTML='';
+        (d.experience||[]).forEach(x=>{
+          const bullets=(x.bullets||[]).map(b=>`<li>${b}</li>`).join('');
+          addBlock('#experience', `<div contenteditable>${x.title||''}</div>
+            <div class="muted" contenteditable>${x.meta||''}</div>
+            <ul contenteditable>${bullets}</ul>`, !!x.example);
+        });
+        $('#education').innerHTML='';
+        (d.education||[]).forEach(x=>{
+          addBlock('#education', `<div contenteditable>${x.title||''}</div>
+            <div class="muted" contenteditable>${x.meta||''}</div>`, !!x.example);
+        });
+        applyLang();
+      }catch(e){alert('Invalid JSON');} };
+    r.readAsText(f);
+  });
+  $('#btnReset').addEventListener('click',()=>location.reload());
+
+  /* ===== Init ===== */
+  // Zaai voorbeelden in EN (alleen als leeg), pas taal toe; applyLang zet chips slim.
+  seedExamplesIfEmpty();
+  applyLang();
+})();
+</script>
+<script>
+// ================== Kleurkiezer: pas root-vars én localStorage aan ==================
+function setColorVariable(name, value) {
+  document.documentElement.style.setProperty(`--${name}`, value);
+  localStorage.setItem(name, value);
+}
+
+// Herstel kleuren bij laden
+['royal', 'ink'].forEach(name => {
+  const val = localStorage.getItem(name);
+  if (val) setColorVariable(name, val);
+});
+
+// Eventlisteners voor kleurkiezers
+document.getElementById('colorRoyal')?.addEventListener('input', e => {
+  setColorVariable('royal', e.target.value);
+});
+document.getElementById('colorInk')?.addEventListener('input', e => {
+  setColorVariable('ink', e.target.value);
+});
+</script>
+</body>
+</html>
